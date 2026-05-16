@@ -1,25 +1,12 @@
 """Dashboard routes."""
 
-from flask import Blueprint, render_template, session, redirect, url_for, jsonify, request
+from flask import Blueprint, render_template, session, redirect, url_for, jsonify
 from database.db_manager import Database
 from routes.auth_routes import login_required, admin_required
 from datetime import datetime, timedelta
 
 dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/')
 db = Database()
-
-
-def _is_mobile_view() -> bool:
-    """Determine whether to render mobile-oriented templates."""
-    forced_view = (request.args.get('view') or '').strip().lower()
-    if forced_view == 'mobile':
-        return True
-    if forced_view == 'desktop':
-        return False
-
-    user_agent = (request.user_agent.string or '').lower()
-    mobile_markers = ['android', 'iphone', 'ipad', 'ipod', 'mobile', 'webview']
-    return any(marker in user_agent for marker in mobile_markers)
 
 
 @dashboard_bp.route('/')
@@ -49,10 +36,8 @@ def home():
         fetch_all=True
     ) or []
     
-    dashboard_template = 'dashboard_mobile.html' if _is_mobile_view() else 'dashboard.html'
-
     return render_template(
-        dashboard_template,
+        'dashboard.html',
         username=username,
         user_role=user[3],
         total_events=total_events,
@@ -68,9 +53,6 @@ def activity_log():
     """Activity log page."""
     username = session.get('username')
     user = db.get_user(username)
-    
-    if not user:
-        return redirect(url_for('auth.logout'))
     
     # Get activity logs
     activities = db._execute(

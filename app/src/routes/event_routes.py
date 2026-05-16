@@ -1,17 +1,10 @@
 """Event management routes."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from database.db_manager import Database
 from routes.auth_routes import login_required, admin_required
 import uuid
-from datetime import datetime, timezone, timedelta
-
-# Philippine timezone (UTC+8)
-PH_TZ = timezone(timedelta(hours=8))
-
-def now_ph():
-    """Return current datetime in Philippine time."""
-    return datetime.now(PH_TZ)
+from datetime import datetime
 
 event_bp = Blueprint('event', __name__, url_prefix='/events')
 db = Database()
@@ -36,7 +29,7 @@ def list_events():
     events = db.get_all_events()
     
     # Sort events: today first, then past (descending), then future (ascending)
-    today = now_ph().date()
+    today = datetime.now().date()
     
     today_events = []
     past_events = []
@@ -105,7 +98,7 @@ def create_event():
             )
         
         # Restrict to today or future
-        today = now_ph().date()
+        today = datetime.now().date()
         if event_date_obj < today:
             return render_template(
                 'events/create.html',
@@ -117,7 +110,6 @@ def create_event():
         # Create event
         event_id = str(uuid.uuid4())
         db.add_event(event_id, event_name, event_date, description)
-        flash(f'Event "{event_name}" created successfully.', 'success')
         
         return redirect(url_for('event.list_events'))
     
@@ -193,7 +185,7 @@ def edit_event(event_id):
             )
             
         # Restrict to today or future
-        today = now_ph().date()
+        today = datetime.now().date()
         if event_date_obj < today:
             return render_template(
                 'events/edit.html',
@@ -208,7 +200,6 @@ def edit_event(event_id):
             (event_name, event_date, description, event_id),
             commit=True
         )
-        flash(f'Event "{event_name}" updated successfully.', 'success')
         
         return redirect(url_for('event.view_event', event_id=event_id))
     
@@ -226,10 +217,8 @@ def delete_event(event_id):
     """Delete event."""
     event = db.get_event(event_id)
     if event:
-        event_name = event[1]
         db._execute("DELETE FROM events WHERE id = ?", (event_id,), commit=True)
         db._execute("DELETE FROM attendance WHERE event_id = ?", (event_id,), commit=True)
-        flash(f'Event "{event_name}" deleted successfully.', 'success')
     
     return redirect(url_for('event.list_events'))
 
@@ -281,7 +270,7 @@ def export_event_api(event_id):
         username = session.get('username')
         db._execute(
             "INSERT INTO activity_log (timestamp, action, user, details) VALUES (?, ?, ?, ?)",
-            (now_ph().isoformat(), 'EXPORT_ATTENDANCE_PDF', username, f'Exported attendance for event {event[1]}'),
+            (datetime.now().isoformat(), 'EXPORT_ATTENDANCE_PDF', username, f'Exported attendance for event {event[1]}'),
             commit=True
         )
             

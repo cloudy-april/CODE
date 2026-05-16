@@ -1,6 +1,6 @@
 """User management routes."""
 
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from database.db_manager import Database
 from routes.auth_routes import login_required, admin_required
 import uuid
@@ -59,7 +59,6 @@ def create_user():
         
         # Create user
         db.add_user(new_username, password, full_name, role)
-        flash(f'User "{new_username}" created successfully.', 'success')
         
         return redirect(url_for('user.list_users'))
     
@@ -81,29 +80,10 @@ def edit_user(target_username):
     if not target_user:
         return redirect(url_for('user.list_users'))
     
-    is_self = (username == target_username)
-    
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
         role = request.form.get('role', 'scanner').strip()
         password = request.form.get('password', '').strip()
-        
-        # Prevent admin from changing own role
-        if is_self and target_user[3] == 'admin':
-            role = 'admin'
-        
-        # Prevent demoting the last admin
-        if target_user[3] == 'admin' and role != 'admin':
-            admin_count = db._execute("SELECT COUNT(*) FROM users WHERE role = 'admin'", fetch_one=True)
-            if admin_count[0] <= 1:
-                return render_template(
-                    'users/edit.html',
-                    username=username,
-                    user_role=user[3],
-                    target_user=target_user,
-                    is_self=is_self,
-                    error='Cannot demote the last admin. Promote another user first.'
-                )
         
         if not full_name:
             return render_template(
@@ -111,7 +91,6 @@ def edit_user(target_username):
                 username=username,
                 user_role=user[3],
                 target_user=target_user,
-                is_self=is_self,
                 error='Full name is required'
             )
         
@@ -129,15 +108,13 @@ def edit_user(target_username):
                 commit=True
             )
         
-        flash(f'User "{target_username}" updated successfully.', 'success')
         return redirect(url_for('user.list_users'))
     
     return render_template(
         'users/edit.html',
         username=username,
         user_role=user[3],
-        target_user=target_user,
-        is_self=is_self
+        target_user=target_user
     )
 
 
@@ -149,7 +126,6 @@ def delete_user(target_username):
     
     # Don't allow deleting yourself
     if username == target_username:
-        flash('You cannot delete your own account.', 'danger')
         return redirect(url_for('user.list_users'))
     
     # Don't allow deleting admin unless it's the only option
@@ -157,10 +133,8 @@ def delete_user(target_username):
     if target_user and target_user[3] == 'admin':
         admins = db._execute("SELECT COUNT(*) FROM users WHERE role = 'admin'", fetch_one=True)
         if admins[0] <= 1:
-            flash('Cannot delete the only admin account.', 'danger')
             return redirect(url_for('user.list_users'))
     
     db._execute("DELETE FROM users WHERE username = ?", (target_username,), commit=True)
-    flash(f'User "{target_username}" deleted successfully.', 'success')
     
     return redirect(url_for('user.list_users'))

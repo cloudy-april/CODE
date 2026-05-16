@@ -3,26 +3,11 @@
 from flask import Blueprint, render_template, request, session, jsonify, redirect, url_for
 from database.db_manager import Database
 from routes.auth_routes import login_required
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 import uuid
-
-PH_TZ = timezone(timedelta(hours=8))
 
 attendance_bp = Blueprint('attendance', __name__, url_prefix='/scan')
 db = Database()
-
-
-def _is_mobile_view() -> bool:
-    """Determine whether to render mobile scanner template."""
-    forced_view = (request.args.get('view') or '').strip().lower()
-    if forced_view == 'mobile':
-        return True
-    if forced_view == 'desktop':
-        return False
-
-    user_agent = (request.user_agent.string or '').lower()
-    mobile_markers = ['android', 'iphone', 'ipad', 'ipod', 'mobile', 'webview']
-    return any(marker in user_agent for marker in mobile_markers)
 
 
 @attendance_bp.route('/')
@@ -33,14 +18,12 @@ def scanner():
     user = db.get_user(username)
     
     # Get events for today only
-    today = datetime.now(PH_TZ).strftime('%Y-%m-%d')
+    today = datetime.now().strftime('%Y-%m-%d')
     all_events = db.get_all_events()
     events = [event for event in all_events if event[2] == today]
     
-    scanner_template = 'scanner_mobile.html' if _is_mobile_view() else 'scanner.html'
-
     return render_template(
-        scanner_template,
+        'scanner.html',
         username=username,
         user_role=user[3],
         events=events
@@ -112,7 +95,7 @@ def mark_attendance():
             }), 200
         
         # Add attendance record
-        timestamp = datetime.now(PH_TZ).isoformat()
+        timestamp = datetime.now().isoformat()
         db._execute(
             """INSERT INTO attendance 
                (event_id, user_id, user_name, timestamp, status, time_slot)
@@ -139,8 +122,7 @@ def mark_attendance():
         }), 200
     
     except Exception as e:
-        print(f"Attendance mark error: {e}")
-        return jsonify({'error': 'An error occurred while marking attendance. Please try again.'}), 500
+        return jsonify({'error': str(e)}), 500
 
 
 @attendance_bp.route('/history/<event_id>')
@@ -225,14 +207,13 @@ def quick_mark():
         
         from config.constants import EMPLOYEES
         user_name = EMPLOYEES.get(user_id, f'Unknown ({user_id})')
-        time_slot = data.get('time_slot', 'morning')
         
-        timestamp = datetime.now(PH_TZ).isoformat()
+        timestamp = datetime.now().isoformat()
         db._execute(
             """INSERT OR IGNORE INTO attendance 
                (event_id, user_id, user_name, timestamp, status, time_slot)
                VALUES (?, ?, ?, ?, ?, ?)""",
-            (event_id, user_id, user_name, timestamp, 'present', time_slot),
+            (event_id, user_id, user_name, timestamp, 'present', 'morning'),
             commit=True
         )
         

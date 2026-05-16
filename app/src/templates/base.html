@@ -3,15 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/MS_Logo_Blue.ico') }}">
-    <meta name="theme-color" content="#2563EB">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="MaScan">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/MS_Logo_Blue.ico') }}">
     <title>{% block title %}MaScan - QR Attendance{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWix+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -20,7 +15,7 @@
         <div class="navbar-container">
             <div class="navbar-brand">
                 <a href="{{ url_for('dashboard.home') }}">
-                    <span class="logo-text"><img src="{{ url_for('static', filename='images/MS_Logo_White.png') }}" alt="Logo"> MaScan</span>
+                    <span class="logo-text"><img src="{{ url_for('static', filename='images/MS_Logo_Blue.ico') }}" alt="Logo"> MaScan</span>
                 </a>
             </div>
             <button class="hamburger-menu" id="hamburgerMenu" aria-label="Toggle menu">
@@ -29,65 +24,49 @@
                 <span></span>
             </button>
             <div class="navbar-menu" id="navbarMenu">
-                <a href="{{ url_for('dashboard.home') }}" class="nav-link"><i class="fa-solid fa-gauge-high nav-icon" aria-hidden="true"></i>Dashboard</a>
-                <a href="{{ url_for('attendance.scanner') }}" class="nav-link"><i class="fa-solid fa-qrcode nav-icon" aria-hidden="true"></i>Scanner</a>
-
-                {% if user_role == 'admin' %}
-                <a href="{{ url_for('event.list_events') }}" class="nav-link"><i class="fa-regular fa-calendar nav-icon" aria-hidden="true"></i>Events</a>
-                <a href="{{ url_for('qr_mgmt.manage_qr') }}" class="nav-link"><i class="fa-solid fa-layer-group nav-icon" aria-hidden="true"></i>QR Management</a>
-                <a href="{{ url_for('user.list_users') }}" class="nav-link"><i class="fa-regular fa-user nav-icon" aria-hidden="true"></i>Users</a>
-                <a href="{{ url_for('dashboard.activity_log') }}" class="nav-link"><i class="fa-regular fa-clock nav-icon" aria-hidden="true"></i>Activity Log</a>
-                {% elif user_role == 'scanner' %}
-                <a href="{{ url_for('event.list_events') }}" class="nav-link"><i class="fa-regular fa-calendar nav-icon" aria-hidden="true"></i>Events</a>
-                {% else %}
-                <a href="{{ url_for('event.list_events') }}" class="nav-link"><i class="fa-regular fa-calendar nav-icon" aria-hidden="true"></i>Events</a>
-                <a href="{{ url_for('dashboard.activity_log') }}" class="nav-link"><i class="fa-regular fa-clock nav-icon" aria-hidden="true"></i>Activity Log</a>
+                <a href="{{ url_for('dashboard.home') }}" class="nav-link">Dashboard</a>
+                <a href="{{ url_for('event.list_events') }}" class="nav-link">Events</a>
+                <a href="{{ url_for('attendance.scanner') }}" class="nav-link">Scanner</a>
+                {% if session.get('username') == 'admin' or user_role == 'admin' %}
+                <a href="{{ url_for('qr_mgmt.manage_qr') }}" class="nav-link">QR Management</a>
+                <a href="{{ url_for('user.list_users') }}" class="nav-link">Users</a>
                 {% endif %}
+                <a href="{{ url_for('dashboard.activity_log') }}" class="nav-link">Activity Log</a>
             </div>
             <div class="navbar-right" id="navbarRight">
                 <span class="user-info">{{ session.get('username') }} ({{ user_role }})</span>
-                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="fa-regular fa-moon" aria-hidden="true"></i></button>
-                <form method="post" action="{{ url_for('auth.logout') }}" style="display: inline;" id="logoutForm">
-                    <button type="button" class="btn btn-logout" onclick="confirmLogout()"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Logout</button>
+                <button class="theme-toggle" id="themeToggle" title="Switch to dark mode" aria-label="Toggle theme">
+                    <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <form method="post" action="{{ url_for('auth.logout') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-logout">Logout</button>
                 </form>
             </div>
         </div>
     </nav>
     {% endif %}
 
-    <div class="container page-enter">
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </div>
-
-    {% if session.get('username') %}
-    <footer class="app-footer">
-        <span>MaScan</span> — QR Attendance System · © <script>document.write(new Date().getFullYear())</script>
-    </footer>
-    {% endif %}
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
     {% block extra_js %}{% endblock %}
 
-    <div id="toast-container"></div>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                {% for category, message in messages %}
-                showToast('{{ message | e }}', '{{ category }}');
-                {% endfor %}
-            });
-        </script>
-        {% endif %}
-    {% endwith %}
-
     <!-- Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i></div>
+                <div class="modal-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 <h2 class="modal-title">Delete Confirmation</h2>
             </div>
             <div class="modal-body">
@@ -106,7 +85,7 @@
     <div id="alertModal" class="modal-backdrop">
         <div class="modal-content">
             <div class="modal-header">
-                <div id="alertModalIcon" class="modal-icon"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></div>
+                <div id="alertModalIcon" class="modal-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
                 <h2 id="alertModalTitle" class="modal-title">Alert</h2>
             </div>
             <div class="modal-body">
@@ -114,23 +93,6 @@
             </div>
             <div class="modal-footer">
                 <button class="modal-btn modal-btn-primary" onclick="closeAlertModal()">OK</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Logout Confirmation Modal -->
-    <div id="logoutModal" class="modal-backdrop">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-icon" style="color: var(--primary-color);"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i></div>
-                <h2 class="modal-title">Sign Out</h2>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to sign out?</p>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn modal-btn-cancel" onclick="closeLogoutModal()">Cancel</button>
-                <button class="modal-btn modal-btn-delete" style="background: var(--primary-color);" onclick="document.getElementById('logoutForm').submit()">Sign Out</button>
             </div>
         </div>
     </div>

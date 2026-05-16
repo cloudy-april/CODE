@@ -25,12 +25,12 @@ function toggleTheme() {
 
 function updateThemeIcon() {
     const themeToggle = document.getElementById('themeToggle');
-    if (!themeToggle) return;
+    const themeIcon = document.getElementById('themeToggleIcon');
+    if (!themeToggle || !themeIcon) return;
     
     const isDarkMode = document.documentElement.classList.contains('dark-mode');
-    themeToggle.innerHTML = isDarkMode
-        ? '<i class="fa-regular fa-sun" aria-hidden="true"></i>'
-        : '<i class="fa-regular fa-moon" aria-hidden="true"></i>';
+    themeIcon.className = isDarkMode ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    themeToggle.title = isDarkMode ? 'Switch to light mode' : 'Switch to dark mode';
     themeToggle.style.animation = 'spin 0.4s ease-out';
     setTimeout(() => {
         themeToggle.style.animation = '';
@@ -78,60 +78,47 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize hamburger menu
     initHamburgerMenu();
+    
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 300);
+        }, 5000);
+    });
 });
 
-// Toast notification system
-function showToast(message, type = 'info', duration = 4000) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const icons = {
-        success: 'fa-circle-check',
-        danger: 'fa-circle-xmark',
-        warning: 'fa-triangle-exclamation',
-        info: 'fa-circle-info',
-        error: 'fa-circle-xmark'
-    };
-    const iconClass = icons[type] || icons.info;
-    // Map 'error' to 'danger' for styling
-    if (type === 'error') toast.className = 'toast toast-danger';
-    
-    toast.innerHTML = `
-        <div class="toast-icon"><i class="fa-solid ${iconClass}"></i></div>
-        <div class="toast-body">
-            <span class="toast-message">${message}</span>
-        </div>
-        <button class="toast-close" aria-label="Close">&times;</button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-    `;
-    
-    container.appendChild(toast);
-    
-    // Trigger entrance animation
-    requestAnimationFrame(() => {
-        toast.classList.add('toast-visible');
-        toast.querySelector('.toast-progress-bar').style.animationDuration = duration + 'ms';
-    });
-    
-    // Close button
-    toast.querySelector('.toast-close').addEventListener('click', () => dismissToast(toast));
-    
-    // Auto-dismiss
-    setTimeout(() => dismissToast(toast), duration);
+// Show success message
+function showSuccess(message) {
+    const div = document.createElement('div');
+    div.className = 'alert alert-success';
+    div.textContent = message;
+    div.style.animation = 'slideInDown 0.3s ease-out';
+    document.querySelector('.container').insertBefore(div, document.querySelector('.container').firstChild);
+    setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(-20px)';
+        setTimeout(() => div.remove(), 300);
+    }, 3000);
 }
 
-function dismissToast(toast) {
-    if (toast.classList.contains('toast-dismissing')) return;
-    toast.classList.add('toast-dismissing');
-    toast.classList.remove('toast-visible');
-    setTimeout(() => toast.remove(), 350);
+// Show error message
+function showError(message) {
+    const div = document.createElement('div');
+    div.className = 'alert alert-danger';
+    div.textContent = message;
+    div.style.animation = 'slideInDown 0.3s ease-out';
+    document.querySelector('.container').insertBefore(div, document.querySelector('.container').firstChild);
+    setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(-20px)';
+        setTimeout(() => div.remove(), 5000);
+    }, 5000);
 }
-
-function showSuccess(message) { showToast(message, 'success'); }
-function showError(message) { showToast(message, 'danger', 6000); }
 
 // Fetch API helper
 function apiCall(url, method = 'GET', data = null, headers = {}) {
@@ -176,22 +163,4 @@ function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
         showSuccess('Copied to clipboard!');
     });
-}
-
-// Logout confirmation
-function confirmLogout() {
-    const modal = document.getElementById('logoutModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.addEventListener('keydown', function handler(e) {
-            if (e.key === 'Escape') { closeLogoutModal(); document.removeEventListener('keydown', handler); }
-        });
-    } else {
-        document.getElementById('logoutForm').submit();
-    }
-}
-
-function closeLogoutModal() {
-    const modal = document.getElementById('logoutModal');
-    if (modal) modal.classList.remove('active');
 }

@@ -1,6 +1,6 @@
 """Main Flask application for MaScan Attendance System."""
 
-from flask import Flask, render_template
+from flask import Flask
 from flask_cors import CORS
 from flask_session import Session
 import os
@@ -19,7 +19,6 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'mascan-attendance-secret-key-2024')
     app.config['SESSION_TYPE'] = 'filesystem'
-    app.config['SESSION_FILE_DIR'] = os.getenv('SESSION_FILE_DIR', os.path.join(os.path.dirname(__file__), '..', '..', 'flask_session'))
     app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file upload
     
@@ -46,19 +45,9 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(qr_mgmt_bp)
     
-    # Custom error handlers
-    @app.errorhandler(404)
-    def not_found(e):
-        return render_template('errors/404.html'), 404
-    
-    @app.errorhandler(500)
-    def server_error(e):
-        return render_template('errors/500.html'), 500
-    
     return app
 
 
 if __name__ == '__main__':
     app = create_app()
-    debug_mode = os.getenv('DEBUG', 'False').lower() == 'true'
-    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)

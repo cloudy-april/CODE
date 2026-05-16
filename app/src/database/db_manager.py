@@ -1,7 +1,6 @@
 # database/db_manager.py
 """Database manager for handling all SQLite operations."""
 
-import os
 import sqlite3
 import time
 import random
@@ -13,14 +12,8 @@ from typing import Optional, Dict
 class Database:
     """Handles all SQLite interactions for events and attendance."""
     
-    def __init__(self, db_name: str = None):
-        # Allow DB path to be set via environment variable for cloud deployments
-        if db_name is None:
-            db_name = os.getenv('DB_PATH', 'mascan_attendance.db')
+    def __init__(self, db_name: str = "mascan_attendance.db"):
         self.db_name = db_name
-        # Ensure the directory exists
-        db_dir = os.path.dirname(os.path.abspath(db_name))
-        os.makedirs(db_dir, exist_ok=True)
         self.create_tables()
         self.create_enhanced_tables()
         self._ensure_admin_role()
@@ -484,11 +477,10 @@ class Database:
 
     def record_timeslot_attendance(self, event_id: str, school_id: str, time_slot: str) -> bool:
         """Record attendance for a specific time slot."""
-        from datetime import datetime, timezone, timedelta
-        PH_TZ = timezone(timedelta(hours=8))
+        from datetime import datetime
         
-        time_now = datetime.now(PH_TZ).strftime("%H:%M:%S")
-        date_now = datetime.now(PH_TZ).strftime("%Y-%m-%d")
+        time_now = datetime.now().strftime("%H:%M:%S")
+        date_now = datetime.now().strftime("%Y-%m-%d")
         
         # Check if record exists
         check_query = "SELECT id FROM attendance_timeslots WHERE event_id = ? AND user_id = ?"
@@ -612,7 +604,7 @@ class Database:
         """
         result = self._execute(query, (event_id, school_id), fetch_one=True)
         
-        return result[0] == 'Present' if result else False
+        return result == 'Present'
 
     def get_student_by_id(self, school_id: str) -> dict:
         """Get student information by school ID."""

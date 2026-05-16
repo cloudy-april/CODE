@@ -9,12 +9,6 @@
             <h1>Events Management</h1>
             <p>Organize and track all attendance events</p>
         </div>
-        <div class="events-search">
-            <div class="search-input-wrapper">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" id="event-search" placeholder="Search events..." class="search-input" oninput="filterEvents(this.value)">
-            </div>
-        </div>
         {% if user_role == 'admin' %}
         <a href="{{ url_for('event.create_event') }}" class="btn btn-primary btn-lg">
             <span class="icon">+</span> Create Event
@@ -29,7 +23,7 @@
         <div class="events-section">
             <div class="section-header today-section">
                 <div class="section-title-wrapper">
-                    <span class="section-badge today-badge"><i class="fa-solid fa-circle" aria-hidden="true"></i> LIVE</span>
+                    <span class="section-badge today-badge"><i class="fa-solid fa-circle"></i> LIVE</span>
                     <h2 class="section-title">Today's Events</h2>
                 </div>
                 <p class="section-subtitle">{{ today_events|length }} event{{ 's' if today_events|length != 1 else '' }}
@@ -47,14 +41,14 @@
                             <span>⋮</span>
                             <div class="event-menu-dropdown">
                                 <a href="{{ url_for('event.edit_event', event_id=event[0]) }}" class="menu-item">
-                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Edit Event
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit Event
                                 </a>
                                 <a href="#" class="menu-item" onclick="exportEventPDF('{{ event[0] }}'); return false;">
-                                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Export PDF
+                                    <i class="fa-solid fa-file-export"></i> Export PDF
                                 </a>
                                 <a href="#" class="menu-item danger"
                                     onclick="deleteEvent(event, '{{ event[0] }}', '{{ url_for('event.delete_event', event_id=event[0]) }}')">
-                                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Delete
+                                    <i class="fa-solid fa-trash"></i> Delete
                                 </a>
                             </div>
                         </div>
@@ -92,19 +86,20 @@
         {% endif %}
         {% endif %}
 
-        <!-- UPCOMING EVENTS SECTION -->
-        {% if future_events %}
+        <!-- PAST & FUTURE EVENTS SECTION -->
+        {% if past_events or future_events %}
         <div class="events-section">
             <div class="section-header other-section">
                 <div class="section-title-wrapper">
-                    <span class="section-badge other-badge"><i class="fa-regular fa-calendar" aria-hidden="true"></i></span>
-                    <h2 class="section-title">Upcoming Events</h2>
+                    <span class="section-badge other-badge"><i class="fa-solid fa-calendar-days"></i></span>
+                    <h2 class="section-title">Other Events</h2>
                 </div>
-                <p class="section-subtitle">{{ future_events|length }} event{{ 's' if future_events|length != 1 else '' }}</p>
+                <p class="section-subtitle">{{ past_events|length + future_events|length }} event{{ 's' if
+                    (past_events|length + future_events|length) != 1 else '' }}</p>
             </div>
             <div class="events-grid">
-                {% for event in future_events %}
-                <div class="event-card future-event" data-event-id="{{ event[0] }}">
+                {% for event in past_events %}
+                <div class="event-card past-event" data-event-id="{{ event[0] }}">
                     <div class="event-card-header">
                         <div class="event-date-badge">
                             <span class="date-text">{{ event[2] }}</span>
@@ -114,14 +109,14 @@
                             <span>⋮</span>
                             <div class="event-menu-dropdown">
                                 <a href="{{ url_for('event.edit_event', event_id=event[0]) }}" class="menu-item">
-                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Edit Event
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit Event
                                 </a>
                                 <a href="#" class="menu-item" onclick="exportEventPDF('{{ event[0] }}'); return false;">
-                                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Export PDF
+                                    <i class="fa-solid fa-file-export"></i> Export PDF
                                 </a>
                                 <a href="#" class="menu-item danger"
                                     onclick="deleteEvent(event, '{{ event[0] }}', '{{ url_for('event.delete_event', event_id=event[0]) }}')">
-                                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Delete
+                                    <i class="fa-solid fa-trash"></i> Delete
                                 </a>
                             </div>
                         </div>
@@ -150,23 +145,8 @@
                     </div>
                 </div>
                 {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- PAST EVENTS SECTION -->
-        {% if past_events %}
-        <div class="events-section">
-            <div class="section-header other-section">
-                <div class="section-title-wrapper">
-                    <span class="section-badge other-badge"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i></span>
-                    <h2 class="section-title">Past Events</h2>
-                </div>
-                <p class="section-subtitle">{{ past_events|length }} event{{ 's' if past_events|length != 1 else '' }}</p>
-            </div>
-            <div class="events-grid">
-                {% for event in past_events %}
-                <div class="event-card past-event" data-event-id="{{ event[0] }}">
+                {% for event in future_events %}
+                <div class="event-card future-event" data-event-id="{{ event[0] }}">
                     <div class="event-card-header">
                         <div class="event-date-badge">
                             <span class="date-text">{{ event[2] }}</span>
@@ -176,14 +156,14 @@
                             <span>⋮</span>
                             <div class="event-menu-dropdown">
                                 <a href="{{ url_for('event.edit_event', event_id=event[0]) }}" class="menu-item">
-                                    <i class="fa-regular fa-pen-to-square" aria-hidden="true"></i> Edit Event
+                                    <i class="fa-solid fa-pen-to-square"></i> Edit Event
                                 </a>
                                 <a href="#" class="menu-item" onclick="exportEventPDF('{{ event[0] }}'); return false;">
-                                    <i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i> Export PDF
+                                    <i class="fa-solid fa-file-export"></i> Export PDF
                                 </a>
                                 <a href="#" class="menu-item danger"
                                     onclick="deleteEvent(event, '{{ event[0] }}', '{{ url_for('event.delete_event', event_id=event[0]) }}')">
-                                    <i class="fa-regular fa-trash-can" aria-hidden="true"></i> Delete
+                                    <i class="fa-solid fa-trash"></i> Delete
                                 </a>
                             </div>
                         </div>
@@ -218,7 +198,7 @@
     </div>
     {% else %}
     <div class="empty-state">
-        <div class="empty-icon"><i class="fa-regular fa-calendar" aria-hidden="true"></i></div>
+        <div class="empty-icon"><i class="fa-solid fa-calendar-plus"></i></div>
         <h2>No Events Yet</h2>
         <p>Start creating events to begin tracking attendance</p>
         {% if user_role == 'admin' %}
@@ -241,52 +221,9 @@
         gap: 20px;
     }
 
-    .events-search {
-        flex: 1;
-        max-width: 320px;
-        min-width: 200px;
-    }
-
-    .search-input-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-    }
-
-    .search-icon {
-        position: absolute;
-        left: 14px;
-        color: var(--text-secondary);
-        font-size: 0.9em;
-        pointer-events: none;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 10px 14px 10px 40px;
-        border: 1.5px solid var(--border-color);
-        border-radius: 99px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        font-size: 0.9rem;
-        font-family: inherit;
-        transition: all 0.2s;
-    }
-
-    .search-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: var(--focus-ring);
-    }
-
-    .search-input::placeholder {
-        color: var(--text-secondary);
-        opacity: 0.6;
-    }
-
     .header-content h1 {
         margin: 0 0 8px 0;
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 700;
         color: var(--text-color);
         background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -297,7 +234,7 @@
 
     .header-content p {
         margin: 0;
-        color: var(--text-secondary);
+        color: var(--navbar-text);
         font-size: 1rem;
     }
 
@@ -314,17 +251,13 @@
     .event-card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: var(--border-radius-lg);
+        border-radius: 12px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        transition: var(--transition);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: var(--shadow);
         position: relative;
-    }
-
-    html.dark-mode .event-card {
-        border-color: var(--border-color);
     }
 
     .event-card::before {
@@ -338,13 +271,13 @@
     }
 
     .event-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(42, 115, 255, 0.15);
         border-color: var(--primary-color);
     }
 
     html.dark-mode .event-card:hover {
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 12px 24px rgba(42, 115, 255, 0.25);
     }
 
     .event-card-header {
@@ -358,10 +291,10 @@
     .event-date-badge {
         display: inline-flex;
         align-items: center;
-        padding: 6px 14px;
-        background: var(--primary-light);
-        border-radius: 99px;
-        border: 1px solid rgba(37, 99, 235, 0.15);
+        padding: 8px 16px;
+        background: linear-gradient(135deg, rgba(42, 115, 255, 0.1), rgba(102, 126, 234, 0.1));
+        border-radius: 8px;
+        border: 1px solid rgba(42, 115, 255, 0.2);
     }
 
     .date-text {
@@ -446,8 +379,8 @@
 
     .event-description {
         margin: 0;
-        font-size: 0.92rem;
-        color: var(--text-secondary);
+        font-size: 0.95rem;
+        color: var(--navbar-text);
         line-height: 1.5;
     }
 
@@ -457,7 +390,7 @@
     }
 
     .event-card-footer {
-        padding: 14px 20px;
+        padding: 16px 20px;
         display: flex;
         gap: 8px;
         border-top: 1px solid var(--border-color);
@@ -485,7 +418,7 @@
 
     .event-action.primary:hover {
         transform: translateX(2px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 4px 12px rgba(42, 115, 255, 0.3);
     }
 
     .event-action.secondary {
@@ -495,7 +428,7 @@
     }
 
     .event-action.secondary:hover {
-        background: var(--primary-light);
+        background: rgba(42, 115, 255, 0.1);
         border-color: var(--primary-color);
     }
 
@@ -528,7 +461,7 @@
 
     .empty-state p {
         margin: 0 0 30px 0;
-        color: var(--text-secondary);
+        color: var(--navbar-text);
         font-size: 1rem;
     }
 
@@ -543,27 +476,20 @@
     }
 
     .section-header.today-section {
-        border: 1px solid rgba(239, 68, 68, 0.15);
-        background: rgba(239, 68, 68, 0.04);
-        padding: 20px 24px;
-        border-radius: var(--border-radius);
-        margin-bottom: 24px;
+        border-bottom: 3px solid rgba(42, 115, 255, 0.2);
+        background: linear-gradient(135deg, rgba(42, 115, 255, 0.05), rgba(102, 126, 234, 0.05));
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 28px;
     }
 
     html.dark-mode .section-header.today-section {
-        background: rgba(239, 68, 68, 0.06);
+        background: linear-gradient(135deg, rgba(42, 115, 255, 0.08), rgba(102, 126, 234, 0.08));
     }
 
     .section-header.other-section {
-        border: 1px solid var(--border-color);
-        background: var(--input-bg);
-        border-radius: var(--border-radius);
-        padding: 20px 24px;
-    }
-
-    html.dark-mode .section-header.other-section {
-        border-color: var(--border-color);
-        background: var(--input-bg);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 20px;
     }
 
     .section-title-wrapper {
@@ -595,39 +521,39 @@
     }
 
     .section-badge.today-badge {
-        background: rgba(239, 68, 68, 0.12);
-        color: #ef4444;
+        background: rgba(255, 67, 67, 0.15);
+        color: #ff4343;
     }
 
     .section-badge.other-badge {
-        background: var(--primary-light);
+        background: rgba(42, 115, 255, 0.15);
         color: var(--primary-color);
     }
 
     .section-subtitle {
         margin: 0;
-        color: var(--text-secondary);
-        font-size: 0.92rem;
+        color: var(--navbar-text);
+        font-size: 0.95rem;
         font-weight: 500;
     }
 
     /* Event Card Styling by Type */
     .event-card.today-event {
-        border-left: 2px solid #ef4444;
+        border-left: 4px solid #ff4343;
     }
 
     .event-card.today-event::before {
-        background: linear-gradient(90deg, #ef4444, rgba(239, 68, 68, 0.3));
+        background: linear-gradient(90deg, #ff4343, rgba(255, 67, 67, 0.3));
         height: 3px;
     }
 
     .event-card.today-event:hover {
-        box-shadow: 0 12px 24px rgba(239, 68, 68, 0.12);
-        border-color: rgba(239, 68, 68, 0.5);
+        box-shadow: 0 12px 24px rgba(255, 67, 67, 0.15);
+        border-color: rgba(255, 67, 67, 0.6);
     }
 
     html.dark-mode .event-card.today-event:hover {
-        box-shadow: 0 12px 24px rgba(239, 68, 68, 0.2);
+        box-shadow: 0 12px 24px rgba(255, 67, 67, 0.25);
     }
 
     .event-card.past-event,
@@ -636,16 +562,16 @@
     }
 
     .event-card.past-event {
-        border-left: 2px solid rgba(108, 117, 125, 0.8);
+        border-left: 4px solid var(--navbar-text);
     }
 
     .event-card.future-event {
-        border-left: 2px solid var(--primary-color);
+        border-left: 4px solid var(--primary-color);
     }
 
     /* Section Divider */
     .section-divider {
-        height: 1px;
+        height: 2px;
         background: linear-gradient(90deg, transparent, var(--border-color) 10%, var(--border-color) 90%, transparent);
         margin: 40px 0;
         animation: expandWidth 0.6s ease-out;
@@ -677,7 +603,7 @@
     @media (max-width: 768px) {
         .events-header {
             flex-direction: column;
-            align-items: stretch;
+            align-items: flex-start;
         }
 
         .btn-lg {
@@ -687,23 +613,10 @@
 
         .events-grid {
             grid-template-columns: 1fr;
-            gap: 16px;
         }
 
         .header-content h1 {
-            font-size: 1.5rem;
-        }
-
-        .events-search {
-            max-width: none;
-            min-width: 0;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .events-header {
-            margin-bottom: 24px;
-            gap: 12px;
+            font-size: 1.8rem;
         }
     }
 
@@ -758,21 +671,6 @@
             },
             eventDate ? `Date: ${eventDate}` : null
         );
-    }
-
-    function filterEvents(query) {
-        const q = query.toLowerCase().trim();
-        document.querySelectorAll('.event-card').forEach(card => {
-            const title = (card.querySelector('.event-title')?.textContent || '').toLowerCase();
-            const desc = (card.querySelector('.event-description')?.textContent || '').toLowerCase();
-            const date = (card.querySelector('.date-text')?.textContent || '').toLowerCase();
-            card.style.display = (title.includes(q) || desc.includes(q) || date.includes(q)) ? '' : 'none';
-        });
-        // Show/hide section headers if all cards in that section are hidden
-        document.querySelectorAll('.events-section').forEach(section => {
-            const visibleCards = section.querySelectorAll('.event-card:not([style*="display: none"])');
-            section.style.display = visibleCards.length === 0 ? 'none' : '';
-        });
     }
 
     async function exportEventPDF(eventId) {
