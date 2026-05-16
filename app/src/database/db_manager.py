@@ -1,6 +1,7 @@
 # database/db_manager.py
 """Database manager for handling all SQLite operations."""
 
+import os
 import sqlite3
 import time
 import random
@@ -8,12 +9,14 @@ import bcrypt
 from datetime import datetime
 from typing import Optional, Dict
 
+from config.constants import DATABASE_NAME
+
 
 class Database:
     """Handles all SQLite interactions for events and attendance."""
     
-    def __init__(self, db_name: str = "mascan_attendance.db"):
-        self.db_name = db_name
+    def __init__(self, db_name: str = DATABASE_NAME):
+        self.db_name = os.getenv("DB_PATH", db_name)
         self.create_tables()
         self.create_enhanced_tables()
         self._ensure_admin_role()
