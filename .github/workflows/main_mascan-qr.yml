@@ -59,7 +59,6 @@ jobs:
         with:
           name: python-app
       - name: 'Azure Login (service principal)'
-        if: ${{ secrets.AZURE_CREDENTIALS != '' }}
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
