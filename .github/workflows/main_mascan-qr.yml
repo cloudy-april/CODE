@@ -70,4 +70,3 @@ jobs:
           app-name: 'mascan-qr'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-          package: app
